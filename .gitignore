@@ -34,3 +34,12 @@ nosetests.xml
 .mr.developer.cfg
 .project
 .pydevproject
+
+*~
+*.swp
+*.out
+*.DS_Store
+*.lock
+.idea/
+.idea*/
+.idea*
