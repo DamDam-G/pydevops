@@ -1,0 +1,39 @@
+#!/usr/bin/python -O
+# -*- coding: utf-8 -*-
+
+import sys
+from pydevops.SSH import SSH
+from pydevops.Mail import Mail
+
+if __name__ == "__main__":
+    if len(sys.argv) == 3:
+        chaos = {'hostname':'chaos.olympe.o2t', 'user':'build', 'pwd':''}
+        build = {'hostname':'build.one2team.net', 'user':'build', 'pwd':''}
+        print "Syncing CVS"
+        r = SSH.Exec(chaos, ["/home/build/bin/sync-cvs"])
+        if r["rc"] == 1:
+            Mail.Email({"from":"build-failure@one2team.com",
+                    "to":"devel@one2team.com",
+                    "subject":"BUILD FAILURE ({0}, {1})".format(sys.argv[1], sys.argv[2]),
+                    "text":"".join(r["result"]),
+                    "srv":"apache1.admin.one2team.rod",
+                    "type":"txt"})
+            sys.exit(1)
+        print "Done"
+        print "[BUILDING] "+sys.argv[1]+" "+sys.argv[2]
+        r = SSH.Exec(build, ["/home/build/bin/mkdist {0} {1}".format(sys.argv[1], sys.argv[2])])
+        if r["rc"] == 1:
+            Mail.Email({"from":"build-failure@one2team.com",
+                    "to":"devel@one2team.com",
+                    "subject":"BUILD FAILURE ({0}, {1})".format(sys.argv[1], sys.argv[2]),
+                    "text":"".join(r["result"]),
+                    "srv":"apache1.admin.one2team.rod",
+                    "type":"txt"})
+            sys.exit(1)
+        print "Done"
+        sys.exit(0)
+    else:
+        print """[ERROR] : you must indicate 2 parameters
+            - Application : (ogp, cockpit, o3admin)
+            - Environment : (devel, stable, beta, r7 or legacy).
+            """
